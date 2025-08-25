@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payment • Checkout</title>
+  <style>
+    :root{
+      --bg:#07070b;
+      --card:#0f1720;
+      --muted:#9aa5b1;
+      --accent:#00e6a7;
+      --accent-2:#6b8cff;
+      --glass: rgba(255,255,255,0.03);
+      --glow: 0 8px 30px rgba(107,140,255,0.08), inset 0 1px 0 rgba(255,255,255,0.02);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:
+        radial-gradient(1200px 600px at 10% 20%, rgba(107,140,255,0.06), transparent 8%),
+        radial-gradient(900px 500px at 90% 80%, rgba(0,230,167,0.04), transparent 8%),
+        var(--bg);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:28px;
+    }
+
+    /* LEFT: payment options */
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--glow);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    header.app{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    .logo{
+      width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--mono);
+      color:#041018;font-size:20px;box-shadow:0 6px 18px rgba(107,140,255,0.12);
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .cards{
+      margin-top:14px;
+      display:grid;
+      gap:12px;
+    }
+
+    .pay-card{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border-radius:12px;
+      padding:14px;
+      border:1px solid rgba(255,255,255,0.02);
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .pay-card:hover{ transform:translateY(-6px); box-shadow: 0 18px 40px rgba(0,0,0,0.6); }
+
+    .brand {
+      width:64px;height:64px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;font-weight:700;
+      flex-shrink:0;border:1px solid rgba(255,255,255,0.02);
+    }
+    .brand svg{width:42px;height:42px}
+
+    .info{
+      flex:1;
+      min-width:0;
+    }
+    .info .method{font-weight:700;font-size:15px}
+    .info .desc{font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:8px;align-items:center}
+    .no-box{
+      display:flex;gap:8px;align-items:center;margin-top:8px;
+    }
+    .number{
+      background:rgba(255,255,255,0.02);
+      padding:8px 10px;border-radius:10px;font-family:var(--mono);font-size:13px;color:#cfeee0;
+      border:1px solid rgba(255,255,255,0.015);
+      user-select:all;
+    }
+
+    .actions{display:flex;gap:8px;align-items:center;margin-left:8px}
+    .btn{
+      background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;font-weight:600;cursor:pointer;
+      transition:all .12s ease;color:var(--accent-2);backdrop-filter: blur(4px);
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-ghost{color:var(--muted);border-style:dashed}
+    .btn-copy{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#041018;border:0}
+
+    .meta{
+      display:flex;gap:12px;align-items:center;margin-top:8px;color:var(--muted);font-size:12px;
+    }
+
+    .side{
+      position:sticky;top:28px;
+      height:fit-content;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:var(--radius);padding:18px;border:1px solid rgba(255,255,255,0.03);
+      box-shadow:var(--glow);
+    }
+
+    .amount{
+      display:flex;gap:10px;align-items:center;margin-bottom:12px;
+    }
+    .amount input{
+      width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);
+      background:transparent;color:inherit;font-size:16px;font-weight:700;font-family:inherit;
+    }
+    .small{font-size:13px;color:var(--muted)}
+
+    .qr{
+      height:260px;border-radius:12px;background:linear-gradient(135deg, rgba(107,140,255,0.06), rgba(0,230,167,0.03));
+      display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;border:1px dashed rgba(255,255,255,0.03);
+      margin-bottom:12px;position:relative;overflow:hidden;
+    }
+
+    .qr img{width:180px;height:180px;filter:drop-shadow(0 10px 30px rgba(0,0,0,0.6));border-radius:14px}
+
+    .hint{font-size:13px;color:var(--muted);margin-bottom:10px}
+    .pay-now{display:block;width:100%;padding:12px;border-radius:12px;border:0;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#041018;cursor:pointer;font-size:16px}
+    .pay-now:active{transform:translateY(1px)}
+
+    .toast{
+      position:fixed;right:22px;bottom:22px;background:linear-gradient(90deg, rgba(8,9,13,0.95), rgba(8,9,13,0.92));
+      padding:10px 14px;border-radius:10px;color:#dfffe6;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);
+      transform:translateY(18px) scale(.98);opacity:0;pointer-events:none;transition:all .28s cubic-bezier(.2,.8,.2,1);
+    }
+    .toast.show{opacity:1;transform:none;pointer-events:auto}
+
+    @media (max-width:980px){
+      .wrap{grid-template-columns:1fr; padding-bottom:40px}
+      .side{position:relative;top:auto}
+    }
+
+    .neonline{
+      height:2px;border-radius:999px;background:linear-gradient(90deg, transparent, rgba(107,140,255,0.14), transparent);
+      margin:12px 0 6px 0;
+    }
+
+    .icon{width:18px;height:18px;display:inline-block;vertical-align:middle}
+    .small-muted{color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div class="app">
+        <div>
+          <h1>Website Payment</h1>
+          <p class="lead">Pilih metode pembayaran — Salin nomor untuk memulai transaksi.
+        </div>
+      </div>
+
+      <div class="neonline"></div>
+
+      <div class="cards">
+        <!-- DANA -->
+        <div class="pay-card" data-method="dana" data-number="08xxx">
+          <div class="brand" style="background:linear-gradient(135deg,#ff6b6b,#ffd166);color:#08131a">
+            <!-- simple DANA-ish logo -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="20" height="16" rx="3" fill="white" /><path d="M6 9h12v6H6z" fill="#ff6b6b"/></svg>
+          </div>
+          <div class="info">
+            <div class="method">DANA</div>
+            <div class="desc">Metode Pembayaran Dana</div>
+
+            <div class="no-box">
+              <div class="number" aria-label="nomor dana">083142280238</div>
+              <div class="actions">
+                <button class="btn btn-copy" data-copy="083142280238">Salin No.</button>
+                <button class="btn btn-ghost" data-qr="dana">Tampilkan QR</button>
+              </div>
+            </div>
+
+            <div class="meta">
+              <div class="small-muted">Nama: ?</div>
+              <div class="small-muted">Tag: DANA</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OVO -->
+        <div class="pay-card" data-method="ovo" data-number="083142280238">
+          <div class="brand" style="background:linear-gradient(135deg,#6b8cff,#b38bff);color:#021024">
+            <!-- simple OVO-ish logo -->
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" fill="white"/><path d="M8 12h8" stroke="#6b8cff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div class="info">
+            <div class="method">OVO</div>
+            <div class="desc">Metode Pembayaran ovo</div>
+
+            <div class="no-box">
+              <div class="number">083142280238</div>
+              <div class="actions">
+                <button class="btn btn-copy" data-copy="08xxx">Salin No.</button>
+                <button class="btn btn-ghost" data-qr="ovo">Tampilkan QR</button>
+              </div>
+            </div>
+
+            <div class="meta">
+              <div class="small-muted">Nama: ?</div>
+              <div class="small-muted">Tag: OVO</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GOPAY -->
+        <div class="pay-card" data-method="gopay" data-number="083142280238">
+          <div class="brand" style="background:linear-gradient(135deg,#00e6a7,#00b894);color:#012b23">
+            <!-- simple GOPAY-ish logo -->
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" fill="white"/><path d="M6.5 11h11" stroke="#00b894" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="info">
+            <div class="method">GoPay</div>
+            <div class="desc">Metode Pembayaran GoPay</div>
+
+            <div class="no-box">
+              <div class="number">083142280238</div>
+              <div class="actions">
+                <button class="btn btn-copy" data-copy="083142280238">Salin No.</button>
+                <button class="btn btn-ghost" data-qr="gopay">Tampilkan QR</button>
+              </div>
+            </div>
+
+            <div class="meta">
+              <div class="small-muted">Nama: ?</div>
+              <div class="small-muted">Tag: GOPAY</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <aside class="side">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div class="small-muted">Jumlah Bayar</div>
+          <div class="small" style="font-weight:800;margin-top:6px">Invoice #<span id="invoice">PD-001</span></div>
+        </div>
+        <div class="small-muted">Metode: <strong id="selectedMethod">DANA</strong></div>
+      </div>
+
+      <div class="amount">
+        <input id="amountInput" inputmode="numeric" placeholder="Masukkan jumlah (contoh: 25.000)" />
+      </div>
+
+      <div class="hint">Atur jumlah, lalu pilih metode di kiri. Klik <strong>Salin No.</strong> untuk menyalin nomor penerima.</div>
+
+      <div class="qr" id="qrPreview">
+        <!-- placeholder QR -->
+        <div id="qrPlaceholder" style="text-align:center">
+          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="120" height="120" rx="12" fill="#fff" opacity="0.06"/>
+            <g fill="#fff" opacity="0.12">
+              <rect x="8" y="8" width="28" height="28" rx="4"/>
+              <rect x="84" y="8" width="28" height="28" rx="4"/>
+              <rect x="8" y="84" width="28" height="28" rx="4"/>
+            </g>
+            <g fill="#fff" opacity="0.14">
+              <rect x="46" y="44" width="8" height="8"/>
+              <rect x="56" y="44" width="8" height="8"/>
+              <rect x="46" y="54" width="8" height="8"/>
+              <rect x="66" y="54" width="8" height="8"/>
+              <rect x="76" y="64" width="8" height="8"/>
+              <rect x="36" y="64" width="8" height="8"/>
+            </g>
+          </svg>
+          <div style="margin-top:10px;color:var(--muted)">QR Placeholder — klik tombol "Tampilkan QR" di metode.</div>
+        </div>
+        <img id="qrImage" src="" alt="QR Code" style="display:none" />
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <button class="pay-now" id="payNowBtn">Saya Sudah Bayar • Konfirmasi</button>
+      </div>
+
+      <div style="font-size:12px;color:var(--muted)">
+        Tips: Gunakan nominal yang benar agar otomatis terkonfirmasi. Pastikan memeriksa nama & nomor.
+      </div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Tersalin ke clipboard</div>
+
+  <script>
+    const toast = document.getElementById('toast');
+    function showToast(text = "Tersalin ke clipboard") {
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(()=> toast.classList.remove('show'), 2500);
+    }
+
+    document.querySelectorAll('.btn-copy').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const val = btn.getAttribute('data-copy') || btn.closest('.pay-card')?.dataset?.number;
+        if(!val) return;
+        const amt = document.getElementById('amountInput').value.trim();
+        const final = amt ? val + " | Nominal: " + amt : val;
+        try {
+          await navigator.clipboard.writeText(final);
+          showToast("Nomor disalin: " + val);
+        } catch (err) {
+          const ta = document.createElement('textarea');
+          ta.value = final; document.body.appendChild(ta);
+          ta.select(); try { document.execCommand('copy'); showToast("Nomor disalin: " + val); } catch(e){ alert("Gagal menyalin — " + final) }
+          ta.remove();
+        }
+      });
+    });
+
+    document.querySelectorAll('[data-qr]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const methodKey = btn.getAttribute('data-qr');
+  production replace with real QR image URLs
+        const parent = btn.closest('.pay-card');
+        const number = parent?.dataset?.number || '';
+        setSelectedMethod(methodKey, number);
+
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><rect width='100%' height='100%' fill='white'/><text x='50%' y='50%' font-size='14' text-anchor='middle' fill='#333' dy='.35em'>${methodKey.toUpperCase()}\\n${number}</text></svg>`;
+        const dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+        const img = document.getElementById('qrImage');
+        const ph = document.getElementById('qrPlaceholder');
+        img.src = dataUrl;
+        ph.style.display = 'none';
+        img.style.display = 'block';
+        showToast("QR siap — scan untuk bayar");
+      });
+    });
+
+    function setSelectedMethod(key, number){
+      document.getElementById('selectedMethod').textContent = key ? key.toUpperCase() : '—';
+      const rnd = String(Math.floor(Math.random()*9000)+1000);
+      document.getElementById('invoice').textContent = 'PD-'+rnd;
+    }
+
+    document.querySelectorAll('.pay-card').forEach(card=>{
+      card.addEventListener('click', (e)=>{
+        if(e.target.closest('button')) return;
+        const method = card.dataset.method || '';
+        const number = card.dataset.number || '';
+        setSelectedMethod(method, number);
+        document.getElementById('amountInput').focus();
+        document.getElementById('qrImage').style.display='none';
+        document.getElementById('qrPlaceholder').style.display='block';
+      });
+    });
+
+    document.getElementById('payNowBtn').addEventListener('click', ()=>{
+      const method = document.getElementById('selectedMethod').textContent;
+      const amount = document.getElementById('amountInput').value || '—';
+      if(method === '—') { showToast('Pilih metode pembayaran terlebih dahulu'); return; }
+      showToast(`Konfirmasi diterima: ${method} • ${amount}`);
+    });
+
+    document.querySelectorAll('.number').forEach(el=>{
+      el.style.cursor = 'pointer';
+      el.title = 'Klik untuk salin';
+      el.addEventListener('click', async ()=>{
+        const txt = el.textContent.trim();
+        try{ await navigator.clipboard.writeText(txt); showToast('Nomor disalin: '+txt); }
+        catch(e){ showToast('Gagal menyalin'); }
+      });
+    });
+
+    document.getElementById('amountInput').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ document.getElementById('payNowBtn').click(); }
+    });
+
+    (function init(){
+      const first = document.querySelector('.pay-card');
+      setSelectedMethod(first?.dataset?.method || 'DANA', first?.dataset?.number || '');
+    })();
+  </script>
+</body>
+</html>
